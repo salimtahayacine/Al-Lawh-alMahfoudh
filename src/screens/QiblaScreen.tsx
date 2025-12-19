@@ -13,12 +13,30 @@ export const QiblaScreen: React.FC = () => {
     const [qiblaDirection, setQiblaDirection] = useState(0); // Direction of Qibla from North
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [sensorAvailable, setSensorAvailable] = useState(true);
 
     useEffect(() => {
-        _subscribe();
-        getLocation();
+        checkSensorAndInitialize();
         return () => _unsubscribe();
     }, []);
+
+    const checkSensorAndInitialize = async () => {
+        try {
+            const available = await Magnetometer.isAvailableAsync();
+            if (!available) {
+                setSensorAvailable(false);
+                setError('Magnetometer sensor not available on this device.');
+                setLoading(false);
+                return;
+            }
+            _subscribe();
+            getLocation();
+        } catch (err) {
+            console.error('Sensor check error:', err);
+            setError('Could not access device sensors.');
+            setLoading(false);
+        }
+    };
 
     const _subscribe = () => {
         setSubscription(
@@ -37,12 +55,12 @@ export const QiblaScreen: React.FC = () => {
     const _angle = (magnetometer: any) => {
         let angle = 0;
         if (magnetometer) {
-            let { x, y } = magnetometer;
-            if (Math.atan2(y, x) >= 0) {
-                angle = Math.atan2(y, x) * (180 / Math.PI);
-            } else {
-                angle = (Math.atan2(y, x) + 2 * Math.PI) * (180 / Math.PI);
-            }
+            let { x, y, z } = magnetometer;
+            // Calculate angle from magnetic field
+            // atan2 gives angle in radians, convert to degrees
+            angle = Math.atan2(y, x) * (180 / Math.PI);
+            // Normalize to 0-360 range
+            angle = (angle + 360) % 360;
         }
         return Math.round(angle);
     };
@@ -71,34 +89,14 @@ export const QiblaScreen: React.FC = () => {
         }
     };
 
-    // Calculate rotation:
-    // Compass should point North.
-    // If phone is pointing North (0deg), magnet is 0 (or 270 depending on axis).
-    // Let's assume standard behavior: 0 = North.
-    // If I rotate phone right (90deg East), magnet shows 90.
-    // To keep North fixed visually, I verify logic... usually:
-    // Rotation = 360 - magnet.
+    // Calculate rotation for compass and qibla arrow
+    // The compass dial rotates to align North with the actual magnetic north
+    // The qibla arrow points to the qibla direction relative to north
+    const compassRotation = -magnetometer; // Rotate compass to align with north
+    const qiblaArrowRotation = qiblaDirection - magnetometer; // Arrow points to qibla
 
-    // BUT we want to show Qibla.
-    // We rotate the COMPASS dial so that North aligns with actual North.
-    // Compass Image rotation = -magnetometer
-    // Qibla Indicator rotation = -magnetometer + qiblaDirection
-
-    // Actually, common Qibla UI:
-    // 1. A compass rose that rotates to match North (-magnetometer)
-    // 2. An arrow on top that points to Qibla (Fixed relative to rose? No, fixed relative to North).
-    // So Arrow rotation relative to screen = qiblaDirection - magnetometer.
-
-    const compassRotation = 360 - magnetometer; // or -magnetometer
-    // Note: React Native transform rotation is clockwise.
-
-    // Let's try simpler:
-    // Arrow points to Qibla.
-    // Arrow Rotation = Qibla - Magnetometer.
-    // If Qibla is 90 (East) and Phone points North (0), Arrow -> 90.
-    // If Phone points East (90), Magnetometer -> 90. Arrow -> 0.
-
-    const arrowRotation = qiblaDirection - magnetometer;
+    // Check if user is facing qibla (within 10 degrees tolerance)
+    const isFacingQibla = Math.abs(qiblaArrowRotation % 360) < 10 || Math.abs(qiblaArrowRotation % 360) > 350;
 
     if (loading) {
         return (
@@ -121,39 +119,26 @@ export const QiblaScreen: React.FC = () => {
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.directionText}>{Math.round(qiblaDirection)}° from North</Text>
-                <Text style={styles.statusText}>
-                    {Math.abs(arrowRotation % 360) < 5 ? 'You are facing Qibla! 🕋' : 'Rotate phone'}
+                <Text style={[styles.statusText, isFacingQibla && styles.facingQibla]}>
+                    {isFacingQibla ? 'You are facing Qibla! 🕋' : 'Rotate phone to face Qibla'}
                 </Text>
             </View>
 
             <View style={styles.compassContainer}>
-                {/* Compass Rose (Background) */}
-                <View style={[styles.compass, { transform: [{ rotate: `${-magnetometer}deg` }] }]}>
+                {/* Compass Rose (Background) - rotates to align North */}
+                <View style={[styles.compass, { transform: [{ rotate: `${compassRotation}deg` }] }]}>
                     <Text style={[styles.cardinal, styles.north]}>N</Text>
                     <Text style={[styles.cardinal, styles.east]}>E</Text>
                     <Text style={[styles.cardinal, styles.south]}>S</Text>
                     <Text style={[styles.cardinal, styles.west]}>W</Text>
 
-                    {/* Tick marks could go here */}
                     <View style={styles.crosshairVertical} />
                     <View style={styles.crosshairHorizontal} />
                 </View>
 
-                {/* Qibla Arrow (Foreground) -> Points to Qibla relative to North */}
-                {/* Wait, if Compass is rotated by -magnetometer (North is Up), then Qibla should be rotated by qiblaDirection relative to Compass? */}
-                {/* Yes. If Compass is North-Up, Qibla is just qiblaDirection. */}
-                {/* Visual hierarchy: 
-                    Static Container
-                       Rotated Compass Rose (points North)
-                          Qibla Arrow (Fixed at qiblaDirection on the rose?)
-                */}
-                {/* Setup: 
-                    Compass Rose rotates so real North matches 'N' on screen.
-                    Arrow is fixed ON The Rose at Qibla angle. 
-                */}
-
-                <View style={[styles.qiblaPointerContainer, { transform: [{ rotate: `${-magnetometer}deg` }] }]}>
-                    <View style={[styles.qiblaArrow, { transform: [{ rotate: `${qiblaDirection}deg` }] }]}>
+                {/* Qibla Arrow - points to Qibla direction */}
+                <View style={[styles.qiblaArrow, { transform: [{ rotate: `${qiblaArrowRotation}deg` }] }]}>
+                    <View style={styles.arrowPointer}>
                         <Text style={styles.kaabaIcon}>🕋</Text>
                         <View style={styles.arrowLine} />
                     </View>
@@ -162,7 +147,7 @@ export const QiblaScreen: React.FC = () => {
             </View>
 
             <Text style={styles.footerText}>
-                Authenticate compass by doing figure-8 motion if invalid.
+                Calibrate compass by moving phone in figure-8 motion if direction seems incorrect.
             </Text>
         </View>
     );
@@ -193,6 +178,11 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: COLORS.neutral.gray[600],
         marginTop: 8,
+    },
+    facingQibla: {
+        color: COLORS.primary[600],
+        fontWeight: 'bold',
+        fontSize: 18,
     },
     errorText: {
         color: 'red',
@@ -244,30 +234,23 @@ const styles = StyleSheet.create({
         position: 'absolute',
     },
 
-    qiblaPointerContainer: {
+    qiblaArrow: {
         width: '100%',
         height: '100%',
         position: 'absolute',
-        justifyContent: 'center',
         alignItems: 'center',
+        justifyContent: 'flex-start',
     },
-    qiblaArrow: {
-        width: 40,
-        height: '100%', // Span full diameter
-        position: 'absolute',
+    arrowPointer: {
         alignItems: 'center',
-        justifyContent: 'flex-start', // Top is 0 degrees
-        paddingTop: 45, // Offset from edge
+        marginTop: 45, // Offset from top edge
     },
     kaabaIcon: {
         fontSize: 32,
-        transform: [{ rotate: '180deg' }], // Because text renders upright, but 0deg is up? 
-        // Logic: if 0deg is Top, and we rotate clockwise...
-        // text is fine.
     },
     arrowLine: {
-        width: 2,
-        height: '35%',
+        width: 3,
+        height: 120,
         backgroundColor: COLORS.gold[500],
         marginTop: 5,
     },

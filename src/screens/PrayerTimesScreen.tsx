@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, Linking, Platform } from 'react-native';
-import { Coordinates, CalculationMethod, PrayerTimes, Prayer } from 'adhan';
+import { Coordinates, CalculationMethod, PrayerTimes, Prayer, Madhab } from 'adhan';
 import * as Location from 'expo-location';
 import { COLORS } from '../constants/colors';
 import { Card } from '../components/common/Card';
@@ -9,13 +9,23 @@ import { Button } from '../components/common/Button';
 export const PrayerTimesScreen: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
-    const [nextPrayer, setNextPrayer] = useState<any>('none');
+    const [nextPrayer, setNextPrayer] = useState<'none' | 'fajr' | 'sunrise' | 'dhuhr' | 'asr' | 'maghrib' | 'isha'>('none');
     const [locationName, setLocationName] = useState('Locating...');
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         getLocationAndCalculations();
-    }, []);
+        
+        // Update next prayer every minute
+        const interval = setInterval(() => {
+            if (prayerTimes) {
+                const next = prayerTimes.nextPrayer();
+                setNextPrayer(next);
+            }
+        }, 60000); // Update every minute
+
+        return () => clearInterval(interval);
+    }, [prayerTimes]);
 
     const getLocationAndCalculations = async () => {
         try {
@@ -48,7 +58,7 @@ export const PrayerTimesScreen: React.FC = () => {
             const coordinates = new Coordinates(latitude, longitude);
             const date = new Date();
             const params = CalculationMethod.MuslimWorldLeague(); // Default, can be improved
-            params.madhab = 'shafi'; // Asr factor
+            params.madhab = Madhab.Shafi; // Asr factor - use proper enum
 
             const times = new PrayerTimes(coordinates, date, params);
             setPrayerTimes(times);
@@ -65,7 +75,7 @@ export const PrayerTimesScreen: React.FC = () => {
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
-    const getPrayerName = (prayer: Prayer) => {
+    const getPrayerName = (prayer: typeof Prayer[keyof typeof Prayer]) => {
         switch (prayer) {
             case Prayer.Fajr: return 'الفجر';
             case Prayer.Sunrise: return 'الشروق';
