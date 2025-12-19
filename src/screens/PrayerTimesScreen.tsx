@@ -75,7 +75,7 @@ export const PrayerTimesScreen: React.FC = () => {
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
-    const getPrayerName = (prayer: typeof Prayer[keyof typeof Prayer]) => {
+    const getPrayerName = (prayer: string) => {
         switch (prayer) {
             case Prayer.Fajr: return 'الفجر';
             case Prayer.Sunrise: return 'الشروق';

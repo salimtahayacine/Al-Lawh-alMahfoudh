@@ -55,7 +55,7 @@ export const QiblaScreen: React.FC = () => {
     const _angle = (magnetometer: any) => {
         let angle = 0;
         if (magnetometer) {
-            let { x, y, z } = magnetometer;
+            let { x, y } = magnetometer;
             // Calculate angle from magnetic field
             // atan2 gives angle in radians, convert to degrees
             angle = Math.atan2(y, x) * (180 / Math.PI);
