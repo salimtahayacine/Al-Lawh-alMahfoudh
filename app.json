@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "اللوح المحفوظ",
+    "slug": "al-lawh-al-mahfoudh",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1B4D3E"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.allawh.almahfoudh"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1B4D3E"
+      },
+      "package": "com.allawh.almahfoudh"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "extra": {
+      "supportsRTL": true
+    },
+    "plugins": []
+  }
+}
