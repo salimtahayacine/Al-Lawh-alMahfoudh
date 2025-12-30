@@ -87,7 +87,8 @@ export const containsArabic = (text: string): boolean => {
 export const isArabic = (text: string): boolean => {
     if (!text) return false;
     const arabicChars = text.match(ARABIC_LETTERS);
-    const totalLetters = text.replace(/[\s\d\p{P}]/gu, '').length;
+    // Remove whitespace, digits, and common punctuation
+    const totalLetters = text.replace(/[\s\d.,;!?()[\]{}'"]/g, '').length;
     return arabicChars !== null && arabicChars.length === totalLetters;
 };
 
