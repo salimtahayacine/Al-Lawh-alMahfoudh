@@ -130,7 +130,7 @@ al-lawh-al-mahfoudh/
 |--------|------|------|
 | [x] | Quran API service | `src/services/api/quranApi.ts` |
 | [x] | Audio API service | `src/services/api/audioApi.ts` |
-| [ ] | AsyncStorage service | `src/services/storage/asyncStorage.ts` |
+| [x] | AsyncStorage service | `src/services/storage/asyncStorage.ts` |
 
 ---
 
@@ -141,7 +141,7 @@ al-lawh-al-mahfoudh/
 | [x] | useQuran hook | `src/hooks/useQuran.ts` |
 | [x] | useAudio hook | `src/hooks/useAudio.ts` |
 | [x] | useBookmarks hook | `src/hooks/useBookmarks.ts` |
-| [ ] | useTheme hook | `src/hooks/useTheme.ts` |
+| [x] | useTheme hook | `src/hooks/useTheme.ts` |
 
 ---
 
@@ -149,9 +149,9 @@ al-lawh-al-mahfoudh/
 
 | Status | Task | File |
 |--------|------|------|
-| [ ] | Quran utilities | `src/utils/quranUtils.ts` |
-| [ ] | Arabic text utilities | `src/utils/arabicUtils.ts` |
-| [ ] | Formatters | `src/utils/formatters.ts` |
+| [x] | Quran utilities | `src/utils/quranUtils.ts` |
+| [x] | Arabic text utilities | `src/utils/arabicUtils.ts` |
+| [x] | Formatters | `src/utils/formatters.ts` |
 
 ---
 
