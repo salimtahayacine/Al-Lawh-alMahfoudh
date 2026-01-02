@@ -8,6 +8,7 @@ import { store } from './src/store/store';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { COLORS } from './src/constants/colors';
 import * as Updates from 'expo-updates';
+import { useStoreInitialization } from './src/hooks/useStoreInitialization';
 
 // React Query Client
 const queryClient = new QueryClient();
@@ -22,6 +23,12 @@ try {
 } catch (e) {
   console.error(e);
 }
+
+// Inner component that has access to Redux
+const AppContent = () => {
+  useStoreInitialization();
+  return <AppNavigator />;
+};
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
@@ -46,7 +53,7 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
           <StatusBar style="light" backgroundColor={COLORS.primary[500]} />
-          <AppNavigator />
+          <AppContent />
         </SafeAreaProvider>
       </QueryClientProvider>
     </Provider>

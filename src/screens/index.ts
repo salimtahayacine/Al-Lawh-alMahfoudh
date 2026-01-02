@@ -7,6 +7,7 @@ import { QuranHomeScreen } from './QuranHomeScreen';
 import { BookmarksScreen } from './BookmarksScreen';
 import { SearchScreen } from './SearchScreen';
 import { SettingsScreen } from './SettingsScreen';
+import { AudioPlayerScreen } from './AudioPlayerScreen';
 
 export {
     HomeScreen,
@@ -18,4 +19,5 @@ export {
     BookmarksScreen,
     SearchScreen,
     SettingsScreen,
+    AudioPlayerScreen,
 };

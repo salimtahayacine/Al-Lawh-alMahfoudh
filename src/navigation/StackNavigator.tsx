@@ -22,7 +22,6 @@ export const QuranStackNavigator: React.FC = () => {
                     fontWeight: 'bold',
                 },
                 headerTitleAlign: 'center',
-                headerBackTitleVisible: false,
                 animation: 'slide_from_right',
             }}
         >

@@ -13,13 +13,13 @@ export const useBookmarks = () => {
     const bookmarks = useSelector((state: RootState) => state.bookmarks.bookmarks);
 
     const isBookmarked = useCallback((surahId: number, ayahId: number) => {
-        return bookmarks.some(b => b.surahId === surahId && b.ayahId === ayahId);
+        return bookmarks.some((b: Bookmark) => b.surahId === surahId && b.ayahId === ayahId);
     }, [bookmarks]);
 
     const toggleBookmark = useCallback((surahId: number, ayahId: number, page: number) => {
         if (isBookmarked(surahId, ayahId)) {
             // Find the bookmark to remove
-            const bookmark = bookmarks.find(b => b.surahId === surahId && b.ayahId === ayahId);
+            const bookmark = bookmarks.find((b: Bookmark) => b.surahId === surahId && b.ayahId === ayahId);
             if (bookmark) {
                 dispatch(removeBookmark(bookmark.id));
             }
@@ -28,7 +28,6 @@ export const useBookmarks = () => {
                 surahId,
                 ayahId,
                 page,
-                createdAt: new Date(),
             }));
         }
     }, [bookmarks, dispatch, isBookmarked]);

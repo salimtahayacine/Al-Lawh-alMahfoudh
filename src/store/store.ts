@@ -3,6 +3,7 @@ import quranReducer from './slices/quranSlice';
 import audioReducer from './slices/audioSlice';
 import settingsReducer from './slices/settingsSlice';
 import bookmarkReducer from './slices/bookmarkSlice';
+import { persistenceMiddleware } from './middleware/persistenceMiddleware';
 
 export const store = configureStore({
     reducer: {
@@ -14,12 +15,11 @@ export const store = configureStore({
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
             serializableCheck: {
-                // Ignore these action types for serializable check
-                ignoredActions: ['bookmarks/addBookmark'],
-                // Ignore these paths in the state
+                // Ignore Date objects in bookmarks for serialization check
+                ignoredActions: ['bookmarks/addBookmark', 'bookmarks/setBookmarks'],
                 ignoredPaths: ['bookmarks.bookmarks'],
             },
-        }),
+        }).concat(persistenceMiddleware),
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

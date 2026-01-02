@@ -11,6 +11,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { QuranStackParamList } from '../types/navigation.types';
 import { useQuran } from '../hooks/useQuran';
 import { useAudio } from '../hooks/useAudio';
+import { useBookmarks } from '../hooks/useBookmarks';
 import { AyahCard } from '../components/quran/AyahCard';
 import { SurahHeader } from '../components/quran/SurahHeader';
 import { COLORS } from '../constants/colors';
@@ -22,6 +23,7 @@ export const QuranReaderScreen: React.FC<Props> = ({ route, navigation }) => {
     const { surahId, ayahId } = route.params;
     const { currentSurah, ayahs, isLoading, error, loadSurah } = useQuran();
     const { playSound, pauseSound, isPlaying, currentSurahId, currentAyahNumber } = useAudio();
+    const { isBookmarked, toggleBookmark } = useBookmarks();
     const flatListRef = useRef<FlatList>(null);
 
     useEffect(() => {
@@ -33,7 +35,7 @@ export const QuranReaderScreen: React.FC<Props> = ({ route, navigation }) => {
     // Scroll to specific ayah if provided
     useEffect(() => {
         if (ayahId && ayahs.length > 0 && flatListRef.current) {
-            const index = ayahs.findIndex(a => a.numberInSurah === ayahId);
+            const index = ayahs.findIndex((a: any) => a.numberInSurah === ayahId);
             if (index !== -1) {
                 setTimeout(() => {
                     flatListRef.current?.scrollToIndex({
@@ -52,6 +54,10 @@ export const QuranReaderScreen: React.FC<Props> = ({ route, navigation }) => {
         } else {
             playSound(surahId, ayahId);
         }
+    };
+
+    const handleBookmarkToggle = (surahId: number, ayahId: number, page: number) => {
+        toggleBookmark(surahId, ayahId, page);
     };
 
     if (isLoading && ayahs.length === 0) {
@@ -79,8 +85,9 @@ export const QuranReaderScreen: React.FC<Props> = ({ route, navigation }) => {
                     <AyahCard
                         ayah={item}
                         isHighlighted={currentSurahId === item.surahId && currentAyahNumber === item.numberInSurah}
+                        isBookmarked={isBookmarked(item.surahId, item.numberInSurah)}
                         onPlayPress={() => handlePlayAyah(item.surahId, item.numberInSurah)}
-                        onBookmarkPress={() => console.log('Bookmark ayah', item.id)}
+                        onBookmarkPress={() => handleBookmarkToggle(item.surahId, item.numberInSurah, item.page || 1)}
                     />
                 )}
                 onScrollToIndexFailed={(info) => {
