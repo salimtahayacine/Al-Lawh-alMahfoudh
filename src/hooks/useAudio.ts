@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Audio } from 'expo-av';
+import { useAudioPlayer, AudioSource } from 'expo-audio';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store/store';
 import {
@@ -23,67 +23,46 @@ export const useAudio = () => {
         playbackSpeed
     } = useSelector((state: RootState) => state.audio);
 
-    const soundRef = useRef<Audio.Sound | null>(null);
+    // Create audio player instance
+    const player = useAudioPlayer();
 
-    // Configure audio mode
-    useEffect(() => {
-        const setupAudio = async () => {
-            try {
-                await Audio.setAudioModeAsync({
-                    playsInSilentModeIOS: true,
-                    staysActiveInBackground: true,
-                    shouldDuckAndroid: true,
-                });
-            } catch (error) {
-                console.error('Error setting up audio:', error);
-            }
-        };
-        setupAudio();
-    }, []);
+    // Track current audio source
+    const [currentSource, setCurrentSource] = useState<string | null>(null);
 
-    // Cleanup on unmount
+    // Update playing state when player state changes
     useEffect(() => {
-        return () => {
-            if (soundRef.current) {
-                soundRef.current.unloadAsync();
-            }
-        };
-    }, []);
+        if (player.playing !== isPlaying) {
+            dispatch(setPlaying(player.playing));
+        }
+    }, [player.playing, isPlaying, dispatch]);
+
+    // Update duration and position
+    useEffect(() => {
+        if (player.duration) {
+            dispatch(setDuration(player.duration * 1000)); // Convert to milliseconds
+        }
+        if (player.currentTime !== undefined) {
+            dispatch(setPosition(player.currentTime * 1000)); // Convert to milliseconds
+        }
+    }, [player.duration, player.currentTime, dispatch]);
 
     const playAyah = useCallback(async (surahId: number, ayahNumber: number) => {
         try {
             dispatch(setAudioLoading(true));
             dispatch(setAudioError(null));
 
-            // Unload previous sound if any
-            if (soundRef.current) {
-                await soundRef.current.unloadAsync();
-            }
-
             // Get URL
             const uri = AudioApi.getAyahAudioUrl(currentReciter.id, surahId, ayahNumber);
 
-            // Load new sound
-            const { sound } = await Audio.Sound.createAsync(
-                { uri },
-                { shouldPlay: true, rate: playbackSpeed },
-                (status) => {
-                    if (status.isLoaded) {
-                        dispatch(setDuration(status.durationMillis || 0));
-                        dispatch(setPosition(status.positionMillis));
-                        dispatch(setPlaying(status.isPlaying));
+            // Only replace the source if it's different
+            if (currentSource !== uri) {
+                player.replace({ uri });
+                setCurrentSource(uri);
+            }
 
-                        if (status.didJustFinish) {
-                            dispatch(setPlaying(false));
-                            // Handle auto-play next here if needed
-                        }
-                    } else if (status.error) {
-                        dispatch(setAudioError(status.error));
-                    }
-                }
-            );
+            // Play the audio
+            player.play();
 
-            soundRef.current = sound;
             dispatch(setCurrentAudio({ surahId, ayahNumber }));
             dispatch(setPlaying(true));
 
@@ -93,29 +72,24 @@ export const useAudio = () => {
         } finally {
             dispatch(setAudioLoading(false));
         }
-    }, [currentReciter, playbackSpeed, dispatch]);
+    }, [currentReciter, player, currentSource, dispatch]);
 
     const pauseAudio = useCallback(async () => {
-        if (soundRef.current) {
-            await soundRef.current.pauseAsync();
-            dispatch(setPlaying(false));
-        }
-    }, [dispatch]);
+        player.pause();
+        dispatch(setPlaying(false));
+    }, [player, dispatch]);
 
     const resumeAudio = useCallback(async () => {
-        if (soundRef.current) {
-            await soundRef.current.playAsync();
-            dispatch(setPlaying(true));
-        }
-    }, [dispatch]);
+        player.play();
+        dispatch(setPlaying(true));
+    }, [player, dispatch]);
 
     const stopAudio = useCallback(async () => {
-        if (soundRef.current) {
-            await soundRef.current.stopAsync();
-            dispatch(setPlaying(false));
-            dispatch(setPosition(0));
-        }
-    }, [dispatch]);
+        player.pause();
+        player.seekTo(0);
+        dispatch(setPlaying(false));
+        dispatch(setPosition(0));
+    }, [player, dispatch]);
 
     return {
         playSound: playAyah,

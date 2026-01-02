@@ -5,6 +5,7 @@ import { TabParamList } from '../types/navigation.types';
 import { HomeScreen } from '../screens/HomeScreen';
 import { QuranStackNavigator } from './StackNavigator';
 import { BookmarksScreen } from '../screens/BookmarksScreen';
+import { AudioPlayerScreen } from '../screens/AudioPlayerScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { COLORS } from '../constants/colors';
 
@@ -29,14 +30,7 @@ const TabIcon: React.FC<{ name: string; focused: boolean }> = ({ name, focused }
     );
 };
 
-// Placeholder screens for Audio and More
-const AudioScreen = () => (
-    <View style={styles.placeholder}>
-        <Text style={styles.placeholderIcon}>🎧</Text>
-        <Text style={styles.placeholderText}>Audio - Coming Soon</Text>
-    </View>
-);
-
+// Placeholder screen for More
 const MoreScreen = () => (
     <View style={styles.placeholder}>
         <Text style={styles.placeholderIcon}>⚙️</Text>
@@ -82,7 +76,7 @@ export const TabNavigator: React.FC = () => {
             />
             <Tab.Screen
                 name="Audio"
-                component={AudioScreen}
+                component={AudioPlayerScreen}
                 options={{
                     title: 'الصوت',
                     tabBarLabel: 'الصوت',
