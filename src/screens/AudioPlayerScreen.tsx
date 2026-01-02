@@ -21,10 +21,10 @@ export const AudioPlayerScreen: React.FC = () => {
             return SURAHS;
         }
 
-        const query = searchQuery.toLowerCase();
+        const query = searchQuery.toLowerCase().trim();
         return SURAHS.filter(
             s =>
-                s.name.includes(searchQuery) ||
+                s.name.includes(searchQuery) || // Arabic search (exact match)
                 s.transliteration.toLowerCase().includes(query) ||
                 s.translation.toLowerCase().includes(query) ||
                 s.id.toString() === query

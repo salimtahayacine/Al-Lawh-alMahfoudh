@@ -15,9 +15,8 @@ export const store = configureStore({
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
             serializableCheck: {
-                // Ignore these action types for serializable check
-                ignoredActions: ['bookmarks/addBookmark'],
-                // Ignore these paths in the state
+                // Ignore Date objects in bookmarks for serialization check
+                ignoredActions: ['bookmarks/addBookmark', 'bookmarks/setBookmarks'],
                 ignoredPaths: ['bookmarks.bookmarks'],
             },
         }).concat(persistenceMiddleware),

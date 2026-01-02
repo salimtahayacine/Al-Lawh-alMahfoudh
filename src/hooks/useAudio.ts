@@ -54,10 +54,13 @@ export const useAudio = () => {
             // Get URL
             const uri = AudioApi.getAyahAudioUrl(currentReciter.id, surahId, ayahNumber);
 
-            // Only replace the source if it's different
+            // Only replace the source if it's different (optimization for same surah playback)
             if (currentSource !== uri) {
                 player.replace({ uri });
                 setCurrentSource(uri);
+            } else {
+                // If same source, just replay from beginning
+                player.seekTo(0);
             }
 
             // Play the audio
